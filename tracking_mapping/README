@@ -1,0 +1,1 @@
+rosrun tracking_mapping tracking_mapping _image_transport:=compressed

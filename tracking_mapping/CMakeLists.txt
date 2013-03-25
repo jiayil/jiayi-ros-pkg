@@ -29,7 +29,26 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #rosbuild_add_executable(example examples/example.cpp)
 #target_link_libraries(example ${PROJECT_NAME})
 
+FILE(GLOB CV_FILES "src/cv/*")
+FILE(GLOB CV_HEADERS "include/tracking_mapping/cv/*")
+
+FILE(GLOB TM_FILES "src/tm/*")
+FILE(GLOB TM_HEADERS "include/tracking_mapping/tm/*")
+
+set(T_M_SOURCE_FILES
+    src/main.cpp
+    ${TM_FILES}
+	${CV_FILES}
+
+)
+
+set(T_M_HEADER_FILES         
+    ${TM_HEADERS}
+	${CV_HEADERS}
+
+)
 
 rosbuild_add_executable(tracking src/tracking.cpp)
 rosbuild_add_executable(tracking2 src/tracking2.cpp)
 rosbuild_add_executable(record_video src/record_video.cpp)
+rosbuild_add_executable(tracking_mapping ${T_M_SOURCE_FILES} ${T_M_HEADER_FILES} )
