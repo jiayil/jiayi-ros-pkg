@@ -1,1 +1,5 @@
+roscore
+roslaunch tracking_mapping camera_node.launch
+rosrun rviz rviz
+
 rosrun tracking_mapping tracking_mapping _image_transport:=compressed
