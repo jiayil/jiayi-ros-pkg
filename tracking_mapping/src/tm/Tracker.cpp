@@ -23,7 +23,7 @@ Tracker::Tracker()
 
     printf("Tracker constructed.\n");
 }
-bool Tracker::init()
+bool Tracker::init(int mode)
 {
     if (!mat_image_current.data)	{
         printf("error - image is empty\n");
@@ -34,10 +34,43 @@ bool Tracker::init()
     cv::Mat	imageInputGray;
     cvtColor(mat_image_current,imageInputGray,CV_BGR2GRAY);
 
-    cv::Vec2d targets[5];	// CCC targets in the order UL-UM-UR-LL-LR
-    bool fFound = initializer.findCCC.process(imageInputGray, targets);
 
 
+    // Dr. Hoff's pattern
+    // !!! targets needs to be converted to cvPoints
+    cv::Vec2d targets[5];	// CCC targets in the order UL-UM-UR-LL-LR 
+    bool fFound;
+    std::vector<cv::Point2d> targets2d;
+
+    initializer.mode = mode;
+
+    // !!! Later, member function .mode  needs to be integrated
+    if(mode == 0)
+        fFound = initializer.findCCC.process(imageInputGray, targets);
+    else if(mode == 1)
+        fFound = initializer.process(imageInputGray);
+
+//    drawKeypoints( imageInputGray, initializer.vec_current_keypoints, mat_image_canvas,
+//                   Scalar::all(-1), DrawMatchesFlags::DEFAULT );
+
+    for (int i=0; i<initializer.matches.size(); i++)
+    {
+        cv::circle(mat_image_canvas,
+                   initializer.vec_current_keypoints[initializer.matches[i].queryIdx].pt,	// center
+            3,							// radius
+            cv::Scalar(0,0,255),		// color
+            -1);						// negative thickness=filled
+
+        char szLabel[50];
+        sprintf(szLabel, "%d",
+                initializer.matches[i].trainIdx);
+        putText (mat_image_canvas, szLabel,
+                 initializer.vec_current_keypoints[initializer.matches[i].queryIdx].pt,
+            cv::FONT_HERSHEY_PLAIN, // font face
+            2.0,					// font scale
+            cv::Scalar(255,0,0),	// font color
+            2);						// thickness
+    }
 
     // Draw targets and label them
     if (fFound)

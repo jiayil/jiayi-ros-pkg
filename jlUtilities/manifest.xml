@@ -1,0 +1,28 @@
+<package>
+  <description brief="jlUtilities">
+
+     jlUtilities
+
+  </description>
+  <author>vision</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/jlUtilities</url>
+
+  <depend package="pcl" />
+  <depend package="pcl_ros" />
+  <depend package="std_msgs"/>
+  <depend package="roscpp"/>
+  <depend package="rospy"/>
+  <depend package="geometry_msgs"/>
+  <depend package="sensor_msgs"/>
+  <depend package="tf" />
+  <depend package="opencv2"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -ljlUtilities"/> 
+  </export>
+  
+</package>
+
+

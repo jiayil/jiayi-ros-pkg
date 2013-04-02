@@ -18,7 +18,7 @@ class Tracker
 {
 public:
     Tracker();
-    bool init();
+    bool init(int mode);
     int updateFrame();
     void drawOpticalFlowWithCurrent();
     void getFundamentalMat(Mat &F,

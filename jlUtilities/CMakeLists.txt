@@ -29,29 +29,22 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #rosbuild_add_executable(example examples/example.cpp)
 #target_link_libraries(example ${PROJECT_NAME})
 
-FILE(GLOB CV_FILES "src/cv/*")
-FILE(GLOB CV_HEADERS "include/tracking_mapping/cv/*")
+#rosbuild_add_library(jlUtilities src/jlUtilities.cpp src/logThis.cpp)
 
-FILE(GLOB TM_FILES "src/tm/*")
-FILE(GLOB TM_HEADERS "include/tracking_mapping/tm/*")
-
-set(T_M_SOURCE_FILES
-    src/main.cpp
-    ${TM_FILES}
-	${CV_FILES}
-
+set(HEADER_FILES
+    include/jlUtilities/CvKeySwitch.h
+    include/jlUtilities/CvImageWriter.h
+    include/jlUtilities/opencv_helper.h
+    include/jlUtilities/jlUtilities.h
+    include/jlUtilities/logThis.h
 )
 
-set(T_M_HEADER_FILES         
-    ${TM_HEADERS}
-	${CV_HEADERS}
-
+set(SOURCE_FILES
+    src/CvKeySwitch.cpp
+    src/CvImageWriter.cpp
+    src/opencv_helper.cpp
+    src/jlUtilities.cpp
+    src/logThis.cpp
 )
 
-rosbuild_add_executable(tracking src/tracking.cpp)
-rosbuild_add_executable(tracking2 src/tracking2.cpp)
-rosbuild_add_executable(record_video src/record_video.cpp)
-rosbuild_add_executable(tracking_mapping ${T_M_SOURCE_FILES} )
-rosbuild_add_executable(tracking_mapping ${T_M_SOURCE_FILES} ${T_M_HEADER_FILES} )
-
-rosbuild_add_executable(init_featrues src/init_featrues.cpp)
+rosbuild_add_library(jlUtilities ${SOURCE_FILES} ${HEADER_FILES})

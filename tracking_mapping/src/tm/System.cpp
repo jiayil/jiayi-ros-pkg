@@ -95,7 +95,7 @@ void System::imageCallback(const sensor_msgs::ImageConstPtr &msg)
     if(!tracker_.flag_initialized)
     {
 //        printf("init\n");
-        if(tracker_.init() == true)
+        if(tracker_.init(1) == true)
         {
             tracker_.flag_initialized = true;
         }
