@@ -10,18 +10,26 @@
 
 #include "tracking_mapping/tm/Tracker.h"
 #include "tracking_mapping/tm/myutils.h"
-
+#include "jlUtilities/opencv_helper.h"
 
 using namespace myutils;
 
 Tracker::Tracker()
 {
     flag_first_image = true;
-    flag_initialized = false;
+    current_state = TRCK_STATE_INITING;
 
-    text_state = std::string("Tracker is initialized with known object");
+    if(initializer.current_state == initializer.INIT_STATE_SUCCESS)
+    {
+        text_state = std::string("Tracker: Initializing the Initializer...");
+        printf("Tracker: constructed.\n");
+    }
+    else
+    {
+        current_state = TRCK_STATE_FAILED;
+        text_state = std::string("Tracker: NOT initialized; Init failed.");
+    }
 
-    printf("Tracker constructed.\n");
 }
 bool Tracker::init(int mode)
 {
@@ -30,10 +38,9 @@ bool Tracker::init(int mode)
         return false;
     }
 
-    // Convert to gray
-    cv::Mat	imageInputGray;
-    cvtColor(mat_image_current,imageInputGray,CV_BGR2GRAY);
-
+//    // Convert current image to grayscale
+//    cv::Mat	imageInputGray;
+//    cvtColor(mat_image_current,imageInputGray,CV_BGR2GRAY);
 
 
     // Dr. Hoff's pattern
@@ -46,90 +53,157 @@ bool Tracker::init(int mode)
 
     // !!! Later, member function .mode  needs to be integrated
     if(mode == 0)
-        fFound = initializer.findCCC.process(imageInputGray, targets);
+    {
+//        fFound = initializer.findCCC.process(imageInputGray, targets);
+    }
     else if(mode == 1)
-        fFound = initializer.process(imageInputGray);
+        fFound = initializer.process(mat_image_current);
 
 //    drawKeypoints( imageInputGray, initializer.vec_current_keypoints, mat_image_canvas,
 //                   Scalar::all(-1), DrawMatchesFlags::DEFAULT );
 
-    for (int i=0; i<initializer.matches.size(); i++)
-    {
-        cv::circle(mat_image_canvas,
-                   initializer.vec_current_keypoints[initializer.matches[i].queryIdx].pt,	// center
-            3,							// radius
-            cv::Scalar(0,0,255),		// color
-            -1);						// negative thickness=filled
+//    for (int i=0; i<initializer.matches.size(); i++)
+//    {
+//        cv::circle(mat_image_canvas,
+//                   initializer.vec_current_keypoints[initializer.matches[i].queryIdx].pt,	// center
+//            3,							// radius
+//            cv::Scalar(0,0,255),		// color
+//            -1);						// negative thickness=filled
 
-        char szLabel[50];
-        sprintf(szLabel, "%d",
-                initializer.matches[i].trainIdx);
-        putText (mat_image_canvas, szLabel,
-                 initializer.vec_current_keypoints[initializer.matches[i].queryIdx].pt,
-            cv::FONT_HERSHEY_PLAIN, // font face
-            2.0,					// font scale
-            cv::Scalar(255,0,0),	// font color
-            2);						// thickness
+//        char szLabel[50];
+//        sprintf(szLabel, "%d",
+//                initializer.matches[i].trainIdx);
+//        putText (mat_image_canvas, szLabel,
+//                 initializer.vec_current_keypoints[initializer.matches[i].queryIdx].pt,
+//            cv::FONT_HERSHEY_PLAIN, // font face
+//            2.0,					// font scale
+//            cv::Scalar(255,0,0),	// font color
+//            2);						// thickness
+//    }
+
+//    drawMatches(mat_image_current, initializer.current_frame.vec_keypoints,
+//                initializer.pattern.mat_image, initializer.pattern.vec_keypoints,
+//                initializer.matches, mat_image_canvas);
+
+//    // Draw targets and label them
+//    if (fFound)
+//    {
+
+//        for (int i=0; i<5; i++)	{
+//            cv::circle(mat_image_canvas,
+//                cv::Point2d(targets[i]),	// center
+//                3,							// radius
+//                cv::Scalar(0,0,255),		// color
+//                -1);						// negative thickness=filled
+
+//            char szLabel[50];
+//            sprintf(szLabel, "%d", i);
+//            putText (mat_image_canvas, szLabel, cv::Point2d(targets[i]),
+//                cv::FONT_HERSHEY_PLAIN, // font face
+//                2.0,					// font scale
+//                cv::Scalar(255,0,0),	// font color
+//                2);						// thickness
+//        }
+
+    if(fFound)
+    {
+//        // check
+        jlUtilities::draw_2dContour(mat_image_canvas,
+                                    initializer.pattern.vec_corners_currentImg,
+                                    CV_RGB(200,0,0));
+
+        camera = initializer.pattern.camera;
+//        //-- Localize the object
+//        std::vector<Point2f> obj;
+//        std::vector<Point2f> scene;
+
+//        for( int i = 0; i < initializer.matches.size(); i++ )
+//        {
+//            //-- Get the keypoints from the good matches
+//            obj.push_back( initializer.vec_current_keypoints[ initializer.matches[i].queryIdx ].pt );
+//            scene.push_back( initializer.vec_keypoints[ initializer.matches[i].trainIdx ].pt );
+//        }
+//        //    printf("pushed: %d obj and %d scene.", obj.size(), scene.size());
+
+//        Mat H = findHomography( obj, scene, CV_RANSAC );
+
+//        std::cout << H << std::endl;
+
+
+
+//        std::vector<Point2f> points2d;
+//        std::vector<Point3d> points2dHomo;
+
+//        for(int i=0; i<initializer.vec_current_keypoints.size();i++)
+//        {
+//            Point3d p;
+//            p.x = initializer.vec_current_keypoints[i].pt.x;
+//            p.y = initializer.vec_current_keypoints[i].pt.y;
+//            p.z = 1;
+//            points2dHomo.push_back(p);
+////            points2d.push_back(initializer.vec_current_keypoints[i].pt);
+//        }
+
+
+
+////        convertPointsToHomogeneous(points2d, points2dHomo);
+//        printf("hi\n");
+//        Mat myMatPoints2dHomo = Mat(points2dHomo).reshape(1);
+////        Mat myMatPoints2dHomo_t(points2dHomo,true);
+////         = myMatPoints2dHomo_t.reshape(0, points2dHomo.size());
+//        std::cout<< myMatPoints2dHomo.rows << " " << myMatPoints2dHomo.cols << std::endl;
+//        Mat mat_points3d = initializer.mat_intrinsics * myMatPoints2dHomo;
+
+//        printf("hi1\n");
+
+//        solvePnPRansac(mat_points3d, points2d,
+//                       camM, NULL, vec_rot, vec_trans  );
+
+//        printf("hi2\n");
+
+
+
+
+
     }
 
-    // Draw targets and label them
-    if (fFound)
-    {
+//    // Get the pose of the target, from the image points
 
-        for (int i=0; i<5; i++)	{
-            cv::circle(mat_image_canvas,
-                cv::Point2d(targets[i]),	// center
-                3,							// radius
-                cv::Scalar(0,0,255),		// color
-                -1);						// negative thickness=filled
+//        Pose pose_m_c = initializer.poseCCC.getPose(camera.K, camera.Kinv, targets);
 
-            char szLabel[50];
-            sprintf(szLabel, "%d", i);
-            putText (mat_image_canvas, szLabel, cv::Point2d(targets[i]),
-                cv::FONT_HERSHEY_PLAIN, // font face
-                2.0,					// font scale
-                cv::Scalar(255,0,0),	// font color
-                2);						// thickness
-        }
+//        // Show the representation of the pose in terms of (ax,ay,az,tx,ty,tz)
+//        double ax, ay, az, tx, ty, tz;
+//        pose_m_c.getXYZangles(ax, ay, az);
+//        pose_m_c.getTranslation(tx, ty, tz);
+//        char sz[80];
+//        sprintf(sz, "ax=%.1f ay=%.1f az=%.1f", ax, ay, az);
+//        putText (mat_image_canvas, sz, cv::Point(40,400),
+//            cv::FONT_HERSHEY_PLAIN, // font face
+//            2.0,					// font scale
+//            cv::Scalar(255,0,0),	// font color
+//            2);
+//        sprintf(sz, "tx=%.1f ty=%.1f tz=%.1f", tx, ty, tz);
+//        putText (mat_image_canvas, sz, cv::Point(40,440),
+//            cv::FONT_HERSHEY_PLAIN, // font face
+//            2.0,					// font scale
+//            cv::Scalar(255,0,0),	// font color
+//            2);
 
+//        drawAxes(mat_image_canvas, camera.K, pose_m_c);	// Draw model coordinate axes
 
-    // Get the pose of the target, from the image points
-
-        Pose pose_m_c = initializer.poseCCC.getPose(camera.K, camera.Kinv, targets);
-
-        // Show the representation of the pose in terms of (ax,ay,az,tx,ty,tz)
-        double ax, ay, az, tx, ty, tz;
-        pose_m_c.getXYZangles(ax, ay, az);
-        pose_m_c.getTranslation(tx, ty, tz);
-        char sz[80];
-        sprintf(sz, "ax=%.1f ay=%.1f az=%.1f", ax, ay, az);
-        putText (mat_image_canvas, sz, cv::Point(40,400),
-            cv::FONT_HERSHEY_PLAIN, // font face
-            2.0,					// font scale
-            cv::Scalar(255,0,0),	// font color
-            2);
-        sprintf(sz, "tx=%.1f ty=%.1f tz=%.1f", tx, ty, tz);
-        putText (mat_image_canvas, sz, cv::Point(40,440),
-            cv::FONT_HERSHEY_PLAIN, // font face
-            2.0,					// font scale
-            cv::Scalar(255,0,0),	// font color
-            2);
-
-        drawAxes(mat_image_canvas, camera.K, pose_m_c);	// Draw model coordinate axes
-
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+//        return true;
+//    }
+//    else
+//    {
+//        return false;
+//    }
 
 //    // Find interest points
 //    std::vector<cv::KeyPoint> keypoints;
 //    initializer.interestPoints.process(imageInputGray, keypoints);
 
 
-
+    return false;
 
 
 
@@ -355,37 +429,38 @@ void Tracker::getFundamentalMat(Mat &F,
     F = findFundamentalMat(imgpts1, imgpts2, FM_RANSAC, 0.1, 0.99);
 }
 
-//void Tracker::getCameraMat(const Mat& K,
+void Tracker::getCameraMat(const Mat& K,
 //                        const Mat& Kinv,
-//                        const vector<KeyPoint>& imgpts1,
-//                        const vector<KeyPoint>& imgpts2,
+                        const vector<KeyPoint>& imgpts1,
+                        const vector<KeyPoint>& imgpts2,
 //                        Matx34d& P,
-//                        Matx34d& P1,
-//                        vector<DMatch>& matches,
+                        Matx34d& P1,
+                        vector<DMatch>& matches
 //                        vector<CloudPoint>& outCloud
-//                        )
-//{
-//    //Find camera matrices
-//    //Get Fundamental Matrix
-//    Mat F = getFundamentalMat(imgpts1, imgpts2, matches);
-//    //Essential matrix: compute then extract cameras [R|t]
-//    Mat_<double> E = K.t() * F * K; //according to HZ (9.12)
-//    //decompose E to P' , HZ (9.19)
-//    SVD svd(E,SVD::MODIFY_A);
-//    Mat svd_u = svd.u;
-//    Mat svd_vt = svd.vt;
-//    Mat svd_w = svd.w;
-//    Matx33d W(0,-1,0,//HZ 9.13
-//              1,0,0,
-//              0,0,1);
-//    Mat_<double> R = svd_u * Mat(W) * svd_vt; //HZ 9.19
-//    Mat_<double> t = svd_u.col(2); //u3
+                        )
+{
+    //Find camera matrices
+    //Get Fundamental Matrix
+    Mat F;
+    getFundamentalMat(F, imgpts1, imgpts2, matches);
+    //Essential matrix: compute then extract cameras [R|t]
+    Mat_<double> E = K.t() * F * K; //according to HZ (9.12)
+    //decompose E to P' , HZ (9.19)
+    SVD svd(E,SVD::MODIFY_A);
+    Mat svd_u = svd.u;
+    Mat svd_vt = svd.vt;
+    Mat svd_w = svd.w;
+    Matx33d W(0,-1,0,//HZ 9.13
+              1,0,0,
+              0,0,1);
+    Mat_<double> R = svd_u * Mat(W) * svd_vt; //HZ 9.19
+    Mat_<double> t = svd_u.col(2); //u3
 //    if (!CheckCoherentRotation(R)) {
 //        cout<<"resulting rotation is not coherent\n";
 //        P1 = 0;
 //        return;
 //    }
-//    P1 = Matx34d(R(0,0),R(0,1),R(0,2),t(0),
-//                 R(1,0),R(1,1),R(1,2),t(1),
-//                 R(2,0),R(2,1),R(2,2),t(2));
-//}
+    P1 = Matx34d(R(0,0),R(0,1),R(0,2),t(0),
+                 R(1,0),R(1,1),R(1,2),t(1),
+                 R(2,0),R(2,1),R(2,2),t(2));
+}

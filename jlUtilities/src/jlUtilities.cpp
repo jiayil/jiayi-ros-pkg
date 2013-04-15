@@ -392,6 +392,19 @@ namespace jlUtilities
     tf::quaternionTFToMsg(stampedTF.getRotation(), msg.orientation);
     
   }
+  void tfToPose(tf::StampedTransform &stampedTF, geometry_msgs::PoseStamped &msg)
+  {
+      tf::Vector3 translation = stampedTF.getOrigin();
+
+      msg.pose.position.x = translation.x();
+      msg.pose.position.y = translation.y();
+      msg.pose.position.z = translation.z();
+
+      tf::quaternionTFToMsg(stampedTF.getRotation(), msg.pose.orientation);
+      msg.header.stamp = stampedTF.stamp_;
+      msg.header.frame_id = stampedTF.frame_id_;
+  }
+
   void eigenMatrix4fToTransform(Eigen::Matrix4f &m, tf::Transform &t)
   {
     tf::Matrix3x3 basis = tf::Matrix3x3(m(0,0), m(0,1), m(0,2),

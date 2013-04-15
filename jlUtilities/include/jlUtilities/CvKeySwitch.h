@@ -17,17 +17,24 @@ namespace jlUtilities
 {
 class CvKeySwitch
 {
-    enum tm_state_id {
-        TM_STATE_EXIT,
-        TM_STATE_READY,
-        TM_STATE_TRACKING
+    CvKeySwitch(CvImageWriter *ptrCIW = NULL);
+
+
+    enum sys_state_id {
+        SYS_STATE_EXIT,
+        SYS_STATE_READY,
+        SYS_STATE_TRACKING,
+        SYS_STATE_PAUSE
     };
-    tm_state_id current_state;
+    sys_state_id current_state;
 
+    CvImageWriter *ptr_image_writer;
 
-    CvKeySwitch();
+    int switchState(char key, cv::Mat *ptr_image = NULL);
 
-    void state(char key, CvImageWriter *ptrCIW = NULL);
+private:
+    CvImageWriter image_writer_;
+
 };
 
 

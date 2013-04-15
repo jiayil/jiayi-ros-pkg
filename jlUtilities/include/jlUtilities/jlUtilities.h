@@ -92,6 +92,7 @@ void foutAppendTFStamped(geometry_msgs::TransformStamped &transform,
 
 void tfToPose(tf::StampedTransform &stampedTF, geometry_msgs::Pose &msg);
 void tfToPose(tf::Transform &trans, geometry_msgs::PoseStamped &msg);
+void tfToPose(tf::StampedTransform &stampedTF, geometry_msgs::PoseStamped &msg);
 void eigenMatrix4fToTransform(Eigen::Matrix4f &m, tf::Transform &t);
 tf::Transform eigenMatrix4fToTransform(Eigen::Matrix4f &m);
 void transformToEigenMatrix4f(tf::Transform &t, Eigen::Matrix4f &m);

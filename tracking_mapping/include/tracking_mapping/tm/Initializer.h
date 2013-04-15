@@ -10,6 +10,9 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "tracking_mapping/cv/Frame.h"
+#include "tracking_mapping/cv/Pattern.h"
+
 #include "tracking_mapping/cv/FindCCC.h"
 #include "tracking_mapping/cv/InterestPoints.h"
 #include "tracking_mapping/cv/Pose.h"
@@ -20,26 +23,49 @@ class Initializer
 {
 public:
     Initializer();
-    Initializer(std::string &name);
+
 
     bool process(cv::Mat &mat_image);
+    void matchFeatures();
+    bool computeHomography(Mat &H);
+    void computePose();
+    bool computePoseCorners();
 
-    FindCCC findCCC;
-    PoseCCC poseCCC;
-    InterestPoints interestPoints;
+
+//    FindCCC findCCC;
+//    PoseCCC poseCCC;
+//    InterestPoints interestPoints;
+
+
+    enum init_state_id
+    {
+        INIT_STATE_SUCCESS,     // Init'ed or pattern not found yet
+        INIT_STATE_FAILED,      // Failed to init
+        INIT_STATE_OBJ_FOUND,   // Pattern found
+        INIT_STATE_POSE_COMPUTED// Pattern/camera pose computed
+    };
+    init_state_id current_state;
 
     int mode;
-    const static float min_match_ratio = 0.5f;
-    std::vector< cv::DMatch > matches;
-    std::vector<cv::KeyPoint> vec_current_keypoints;
 
-    // a list of descriptors of 100
-    cv::Mat mat_poi_descriptors;
-    // a list of descriptors of 5
-    cv::Mat mat_roi;
-    // Cordinates of the POIs on the object
-    std::vector<cv::Point3f> vec_objCords;
-    std::vector<cv::Point2d> vec_POIs;
+    Pattern pattern;
+    Frame current_frame;
+
+    const static float min_match_ratio = 0.6f;
+    std::vector< cv::DMatch > matches;
+
+
+
+
+
+
+
+
+
+
+
+
+
 };
 
 #endif // INITIALIZER_H

@@ -10,7 +10,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "tracking_mapping/tm/Camera.h"
+#include "tracking_mapping/cv/Camera.h"
 #include "tracking_mapping/tm/Initializer.h"
 
 using namespace cv;
@@ -25,15 +25,15 @@ public:
                            std::vector<cv::KeyPoint> keypoints1,
                            std::vector<cv::KeyPoint> keypoints2,
                            std::vector<DMatch> matches);
-//    void getCameraMat(const Mat& K,
-//                      const Mat& Kinv,
-//                      const vector<KeyPoint>& imgpts1,
-//                      const vector<KeyPoint>& imgpts2,
-//                      Matx34d& P,
-//                      Matx34d& P1,
-//                      vector<DMatch>& matches,
-//                      vector<CloudPoint>& outCloud
-//                      );
+    void getCameraMat(const Mat& K,
+    //                        const Mat& Kinv,
+                            const vector<KeyPoint>& imgpts1,
+                            const vector<KeyPoint>& imgpts2,
+    //                        Matx34d& P,
+                            Matx34d& P1,
+                            vector<DMatch>& matches
+    //                        vector<CloudPoint>& outCloud
+                            );
 
     Mat mat_image_current;
     Mat mat_image_previous;
@@ -44,7 +44,15 @@ public:
 
 
     bool flag_first_image;
-    bool flag_initialized;
+
+    enum init_state_id
+    {
+        TRCK_STATE_GOOD,
+        TRCK_STATE_INITING,
+        TRCK_STATE_FAILED
+    };
+    init_state_id current_state;
+
 
 
     std::vector<DMatch> of_matches;

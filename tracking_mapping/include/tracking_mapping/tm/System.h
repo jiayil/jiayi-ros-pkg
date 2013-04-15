@@ -13,8 +13,11 @@
 #include <sensor_msgs/Image.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
-
-
+#include <tf/transform_listener.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <tf/transform_broadcaster.h>
+#include <nav_msgs/Odometry.h>
+#include <nav_msgs/Path.h>
 #include <opencv2/opencv.hpp>
 
 #include "tracking_mapping/tm/Tracker.h"
@@ -28,6 +31,17 @@ private:
     ros::NodeHandle nh_;
     image_transport::Subscriber sub_image_;
     image_transport::Publisher pub_image_preview_;
+
+    ros::Publisher pub_odom_cam_;
+    ros::Publisher pub_path_cam_;
+
+
+    tf::Transform tfCam;    // cam in obj
+    tf::Transform tfOpticalInLocal, tfObjInWorld;
+    tf::TransformBroadcaster br;
+    nav_msgs::Odometry odomCam_;
+    nav_msgs::Path pathCam_;
+    geometry_msgs::PoseStamped poseStampedCam_;
 
     Tracker tracker_;
 

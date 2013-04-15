@@ -12,19 +12,27 @@
 
 namespace jlUtilities
 {
-CvKeySwitch::CvKeySwitch()
+CvKeySwitch::CvKeySwitch(CvImageWriter *ptrCIW)
 {
+    if(ptrCIW == NULL)
+        ptr_image_writer = &image_writer_;
+    else
+        ptr_image_writer = ptrCIW;
+    printf("CvKeySwitch constructed.\n");
 
 }
 
-void CvKeySwitch::state(char key, CvImageWriter *ptrCIW)
+int CvKeySwitch::switchState(char key, cv::Mat *ptr_image)
 {
+    int retValue = 0;
     switch(key)
     {
-//    case 27:
-//        current_state = TM_STATE_EXIT;
-//        printf("\nTM_STATE_EXIT\n");
-//        break;
+    case 27:
+        current_state = SYS_STATE_EXIT;
+        std::cout<< "---------------" << std::endl
+                 << "SYS_STATE_EXIT"  << std::endl
+                 << "---------------" << std::endl;
+        break;
 //    case 't':
 //        if(current_state == TM_STATE_TRACKING)
 //        {
@@ -43,13 +51,22 @@ void CvKeySwitch::state(char key, CvImageWriter *ptrCIW)
 //            printf("\nTM_STATE_TRACKING\n");
 //        }
 //        break;
-//    case 's':
-////        String fileName = fileName_prefix + boost::lexical_cast<string>(fileName_numbering) + fileName_suffix;
-////        imwrite(fileName, frame_gray);
-////        fileName_numbering++;
-////        printf("%s is saved\n", fileName.c_str());
+    case 's':
+        if(ptr_image == NULL)
+        {
+            printf("Error: No image.\n");
+            retValue = -1;
+            break;
+        }
+        ptr_image_writer->writeImage(*ptr_image);
+
+        break;
     }
+
+    return retValue;
 }
+
+
 
 
 
