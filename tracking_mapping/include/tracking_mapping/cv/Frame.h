@@ -8,6 +8,7 @@
 #ifndef FRAME_H
 #define FRAME_H
 #include <opencv2/opencv.hpp>
+#include <opencv2/nonfree/features2d.hpp>
 
 #include "tracking_mapping/cv/Camera.h"
 
@@ -29,8 +30,10 @@ public:
     Camera camera;
 
     //-- CV
-    OrbFeatureDetector detector;
+
+    SurfFeatureDetector detector;
     FREAK extractor;
+//    SurfDescriptorExtractor extractor;
     std::vector<KeyPoint> vec_keypoints;
     Mat mat_descriptors;
     // can't be filled in buildFrameFromImage()

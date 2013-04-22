@@ -139,10 +139,12 @@ void System::imageCallback(const sensor_msgs::ImageConstPtr &msg)
             rot.setValue(M.at<double>(0, 0), M.at<double>(0, 1), M.at<double>(0, 2),
                          M.at<double>(1, 0), M.at<double>(1, 1), M.at<double>(1, 2),
                          M.at<double>(2, 0), M.at<double>(2, 1), M.at<double>(2, 2));
+//            rot = rot.inverse();
             btQuaternion q;
             rot.getRotation(q);
 
             tfCam.setRotation( q );
+            tfCam = tfCam.inverse();
 //            tfCam *= tfOpticalInLocal;
             ros::Time t = ros::Time::now();
             br.sendTransform(tf::StampedTransform(tfCam, t, "world", "cam"));

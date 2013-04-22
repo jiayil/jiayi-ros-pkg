@@ -67,7 +67,8 @@ void mouseEvent(int evt, int x, int y, int flags, void* param)
         Mat mat_extrinsics = Mat::zeros(3, 4, CV_64F);
         mat_extrinsics.at<double>(2, 3) = 400;  // 400mm
         tf::Matrix3x3 rotMatrix;
-        rotMatrix.setRPY(-PI, 0, -PI/2.0);
+        rotMatrix.setRPY(PI, 0, PI/2.0);
+        rotMatrix = rotMatrix.inverse();
 
         for(int i; i<3; i++)
         {

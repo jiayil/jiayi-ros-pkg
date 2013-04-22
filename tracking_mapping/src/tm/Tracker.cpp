@@ -59,7 +59,7 @@ bool Tracker::init(int mode)
     else if(mode == 1)
         fFound = initializer.process(mat_image_current);
 
-//    drawKeypoints( imageInputGray, initializer.vec_current_keypoints, mat_image_canvas,
+//    drawKeypoints( mat_image_current, initializer.current_frame.vec_keypoints, mat_image_canvas,
 //                   Scalar::all(-1), DrawMatchesFlags::DEFAULT );
 
 //    for (int i=0; i<initializer.matches.size(); i++)
@@ -81,9 +81,9 @@ bool Tracker::init(int mode)
 //            2);						// thickness
 //    }
 
-//    drawMatches(mat_image_current, initializer.current_frame.vec_keypoints,
-//                initializer.pattern.mat_image, initializer.pattern.vec_keypoints,
-//                initializer.matches, mat_image_canvas);
+    drawMatches(mat_image_current, initializer.current_frame.vec_keypoints,
+                initializer.pattern.mat_image, initializer.pattern.vec_keypoints,
+                initializer.matches, mat_image_canvas);
 
 //    // Draw targets and label them
 //    if (fFound)
@@ -105,12 +105,12 @@ bool Tracker::init(int mode)
 //                2);						// thickness
 //        }
 
-    if(fFound)
+    if(1)//(fFound)
     {
 //        // check
-        jlUtilities::draw_2dContour(mat_image_canvas,
-                                    initializer.pattern.vec_corners_currentImg,
-                                    CV_RGB(200,0,0));
+//        jlUtilities::draw_2dContour(mat_image_canvas,
+//                                    initializer.pattern.vec_corners_currentImg,
+//                                    CV_RGB(200,0,0));
 
         camera = initializer.pattern.camera;
 //        //-- Localize the object

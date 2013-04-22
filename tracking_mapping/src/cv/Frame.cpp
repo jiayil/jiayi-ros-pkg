@@ -43,4 +43,6 @@ void Frame::buildFrameFromImage(Mat &img)
     detector.detect( mat_image_gray, vec_keypoints );
     extractor.compute( mat_image_gray, vec_keypoints, mat_descriptors );
 
+    printf("Keypoints size: %d.\n", vec_keypoints.size());
+
 }

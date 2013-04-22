@@ -59,6 +59,16 @@ int main(int argc, char** argv)
                 current_state = SYS_STATE_READY;
 
         }
+        else if(key == 'n')
+        {
+            cap >> frame;
+
+            if(frame.empty())
+            {
+                printf("Video ends.\n");
+                break;
+            }
+        }
         if(current_state == SYS_STATE_READY)
         {
             cap >> frame;

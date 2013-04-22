@@ -100,7 +100,7 @@ void Initializer::matchFeatures()
 {
     // matcher is put here, can't be initialized in Initializer's definition.
     cv::BFMatcher matcher(cv::NORM_HAMMING);
-    //FlannBasedMatcher matcher;
+//    FlannBasedMatcher matcher;
     std::vector<std::vector< DMatch > > knnMatches;
 
     matcher.knnMatch(current_frame.mat_descriptors,
@@ -156,6 +156,7 @@ bool Initializer::computeHomography(Mat &H)
     }
 
     matches.swap(inliers);
+    printf("inliers size: %d\n", matches.size());
     return matches.size() >= 4;
 }
 
@@ -166,7 +167,7 @@ bool Initializer::computePoseCorners()
     cv::Mat_<float> Tvec;
     cv::Mat raux, taux;
 
-    cv::solvePnPRansac(pattern.vec_obj_corners3d,
+    cv::solvePnP(pattern.vec_obj_corners3d,
                        pattern.vec_corners_currentImg,
                        pattern.camera.mat_intrinsics,
                        pattern.camera.mat_distCoeffs,
@@ -182,6 +183,7 @@ bool Initializer::computePoseCorners()
 
     if(rotMat(0,0) == 1 && rotMat(1,1) == 1 && rotMat(2,2) == 1 )
     {
+        printf("Identity\n");
         return false;
     }
 
