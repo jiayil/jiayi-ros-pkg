@@ -31,6 +31,7 @@ std::vector<Point> vec_init_corners_temp;
 
 Initializer::Initializer()
 {
+    counter = 0;
     if(pattern.current_state == pattern.PATTERN_STATE_SUCCESS)
     {
         current_state = INIT_STATE_SUCCESS;
@@ -76,15 +77,32 @@ bool Initializer::process(cv::Mat &image)
         return false;
     }
 
-    //-- Warp pattern corners into the current image
-    cv::perspectiveTransform(pattern.vec_corners,
-                             pattern.vec_corners_currentImg,
+    //-- (canceled) Warp pattern corners into the current image
+//    cv::perspectiveTransform(pattern.vec_corners,
+//                             pattern.vec_corners_currentImg,
+//                             H);
+//    for(int i; i<4; i++)
+//        std::cout<< pattern.vec_corners_currentImg[i].x << " " << pattern.vec_corners_currentImg[i].y << std::endl;
+//    std::cout<< std::endl;
+
+    //-- (instead) Warp all the matched points
+    cv::perspectiveTransform(pattern.vec_matchedFeaturePoints,
+                             pattern.vec_matchedFeaturePoints_currentImg,
                              H);
-    for(int i; i<4; i++)
-        std::cout<< pattern.vec_corners_currentImg[i].x << " " << pattern.vec_corners_currentImg[i].y << std::endl;
-    std::cout<< std::endl;
+
+    //-- Compute 3D locations of Pattern's matched features in the current image
+    computeLocation3D(pattern.vec_matchedFeaturePoints,
+                      pattern.vec_obj_matchedFeaturePoints3d,
+                      pattern.obj_img_center,
+                      pattern.scale);
+
+
+
+
+
     //-- Compute the camera pose
-    bool find_pose = computePoseCorners();
+    bool find_pose = computePoseCorners(pattern.vec_obj_matchedFeaturePoints3d,
+                                        pattern.vec_matchedFeaturePoints_currentImg);
     if(!find_pose)
     {
         current_state = INIT_STATE_SUCCESS;
@@ -98,6 +116,8 @@ bool Initializer::process(cv::Mat &image)
 
 void Initializer::matchFeatures()
 {
+    pattern.vec_matchedFeaturePoints.clear();
+
     // matcher is put here, can't be initialized in Initializer's definition.
     cv::BFMatcher matcher(cv::NORM_HAMMING);
 //    FlannBasedMatcher matcher;
@@ -118,6 +138,11 @@ void Initializer::matchFeatures()
         if(distanceRatio < min_match_ratio)
         {
             matches.push_back(bestMatch);
+
+            pattern.vec_matchedFeaturePoints.push_back(
+                        pattern.vec_keypoints[bestMatch.trainIdx].pt);
+            current_frame.vec_matchedFeaturePoints.push_back(
+                        current_frame.vec_keypoints[bestMatch.queryIdx].pt);
         }
     }
 
@@ -130,14 +155,15 @@ void Initializer::matchFeatures()
 bool Initializer::computeHomography(Mat &H)
 {
     // Prepare data for cv::findHomography
-    std::vector<cv::Point2f> srcPoints(matches.size());
-    std::vector<cv::Point2f> dstPoints(matches.size());
+    std::vector<cv::Point2f>& srcPoints = pattern.vec_matchedFeaturePoints;
+    std::vector<cv::Point2f>& dstPoints = current_frame.vec_matchedFeaturePoints;
 
-    for (size_t i = 0; i < matches.size(); i++)
-    {
-        srcPoints[i] = pattern.vec_keypoints[matches[i].trainIdx].pt;
-        dstPoints[i] = current_frame.vec_keypoints[matches[i].queryIdx].pt;
-    }
+    // The following has been done in the matching stage
+//    for (size_t i = 0; i < matches.size(); i++)
+//    {
+//        srcPoints[i] = pattern.vec_keypoints[matches[i].trainIdx].pt;
+//        dstPoints[i] = current_frame.vec_keypoints[matches[i].queryIdx].pt;
+//    }
 
 
     // Find homography matrix and get inliers mask
@@ -160,20 +186,23 @@ bool Initializer::computeHomography(Mat &H)
     return matches.size() >= 4;
 }
 
-bool Initializer::computePoseCorners()
+bool Initializer::computePoseCorners(std::vector<cv::Point3f> &pts3D,
+                                     std::vector<cv::Point2f> &pts2D)
 {
 
     cv::Mat Rvec;
     cv::Mat_<float> Tvec;
     cv::Mat raux, taux;
 
-    cv::solvePnP(pattern.vec_obj_corners3d,
-                       pattern.vec_corners_currentImg,
-                       pattern.camera.mat_intrinsics,
-                       pattern.camera.mat_distCoeffs,
-                       raux,
-                       taux);
-
+    std::cout<< counter << std::endl;
+    counter++;
+    cv::solvePnPRansac(pts3D,
+                 pts2D,
+                 pattern.camera.mat_intrinsics,
+                 pattern.camera.mat_distCoeffs,
+                 raux,
+                 taux);
+    std::cout<< "finish pnp" << std::endl;
     //-- Matrix conversion
     raux.convertTo(Rvec,CV_32F);
     taux.convertTo(Tvec ,CV_32F);
@@ -217,4 +246,22 @@ void Initializer::computePose()
 //    camM = Mat(M);
 
 //    std::cout << camM << std::endl;
+}
+
+void Initializer::computeLocation3D(std::vector<cv::Point2f> &pts2D,
+                       std::vector<cv::Point3f> &pts3D,
+                       cv::Point2f centerPoint,
+                       float scale)
+{
+    pts3D.clear();
+    // scale unit: mm/pix
+
+    for(size_t i=0;i<pts2D.size();i++)
+    {
+        cv::Point3f p;
+        p.x = (centerPoint.y - pts2D[i].y) * scale;
+        p.y = (centerPoint.x - pts2D[i].x) * scale;
+        p.z = 0;
+        pts3D.push_back(p);
+    }
 }

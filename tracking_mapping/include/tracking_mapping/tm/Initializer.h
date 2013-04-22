@@ -29,7 +29,12 @@ public:
     void matchFeatures();
     bool computeHomography(Mat &H);
     void computePose();
-    bool computePoseCorners();
+    bool computePoseCorners(std::vector<cv::Point3f> &pts3D,
+                            std::vector<cv::Point2f> &pts2D);
+    void computeLocation3D(std::vector<cv::Point2f> &pts2D,
+                           std::vector<cv::Point3f> &pts3D,
+                           cv::Point2f centerPoint,
+                           float scale);
 
 
 //    FindCCC findCCC;
@@ -47,6 +52,7 @@ public:
     init_state_id current_state;
 
     int mode;
+    size_t counter;
 
     Pattern pattern;
     Frame current_frame;

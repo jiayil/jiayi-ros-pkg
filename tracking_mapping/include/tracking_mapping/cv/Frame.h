@@ -35,9 +35,10 @@ public:
     FREAK extractor;
 //    SurfDescriptorExtractor extractor;
     std::vector<KeyPoint> vec_keypoints;
+    std::vector<cv::Point2f> vec_matchedFeaturePoints;   // point datatype from KeyPoint, matched with another frame
     Mat mat_descriptors;
     // can't be filled in buildFrameFromImage()
-    double scale;
+    float scale;
 
 
 };

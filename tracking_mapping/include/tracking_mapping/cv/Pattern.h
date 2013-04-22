@@ -27,11 +27,13 @@ public:
     //-- Physical
     std::vector<cv::Point2f> vec_corners;   // four corners of the book: TL TR BR BL
     std::vector<cv::Point2f> vec_corners_currentImg;
+    std::vector<cv::Point2f> vec_matchedFeaturePoints_currentImg;
     double obj_width, obj_height;
 
     //-- CV
     Point obj_img_center;
     std::vector<Point3f> vec_obj_corners3d;
+    std::vector<Point3f> vec_obj_matchedFeaturePoints3d;
 
 
 };

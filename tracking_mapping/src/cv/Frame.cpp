@@ -38,6 +38,7 @@ void Frame::buildFrameFromImage(Mat &img)
     img_height = mat_image.rows;
     frame_counter++;
 
+    vec_matchedFeaturePoints.clear();
 
     //-- CV
     detector.detect( mat_image_gray, vec_keypoints );
