@@ -1,3 +1,5 @@
+Commands to run
+
 roscore
 ~~roslaunch tracking_mapping camera_node.launch~~
 rosrun rviz rviz
