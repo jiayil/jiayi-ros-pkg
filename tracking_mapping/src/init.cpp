@@ -25,6 +25,57 @@ std::vector<cv::Point> vec_corners;
 
 bool flag_is_written = false;
 
+void outputParam()
+{
+    float obj_width = 216; // 220mm
+    float obj_height = 279; // 240mm
+
+    // intrinsics
+    double K_[3][3] =
+    { {881.68473, 0, 398.14820},
+    {0,  884.03796, 289.57924},
+    {0,   0,   1} };
+
+    Mat mat_intrinsics = cv::Mat(3, 3, CV_64F, K_).clone();
+
+
+
+    // extrinsics
+    Mat mat_extrinsics = Mat::zeros(3, 4, CV_64F);
+    mat_extrinsics.at<double>(2, 3) = 595;  // 400mm
+
+
+
+    tf::Matrix3x3 rotMatrix;
+    rotMatrix.setRPY(PI, 0, PI/2.0);
+    rotMatrix = rotMatrix.inverse();
+
+    for(int i; i<3; i++)
+    {
+        mat_extrinsics.at<double>(i, 0) = rotMatrix.getRow(i).getX();
+        mat_extrinsics.at<double>(i, 1) = rotMatrix.getRow(i).getY();
+        mat_extrinsics.at<double>(i, 2) = rotMatrix.getRow(i).getZ();
+
+    }
+
+    // distortion coeffs
+    double dC[5] = {0.09026, -0.13131, 0.00076, 0.00090, 0};
+    Mat mat_distCoeffs = cv::Mat(5, 1, CV_64F, dC).clone();
+
+
+    // write vec to file
+    std::string fileName = "data/book.yml";
+    FileStorage fs(fileName, FileStorage::WRITE);
+    fs << "objWidth" << obj_width;
+    fs << "objHeight" << obj_height;
+    fs << "corners" << vec_corners;
+    fs << "intrinsics" << mat_intrinsics;
+    fs << "extrinsics" << mat_extrinsics;
+    fs << "distCoeffs" << mat_distCoeffs;
+    fs.release();
+    std::cout<< fileName << " is generated." << std::endl;
+}
+
 //callback function
 void mouseEvent(int evt, int x, int y, int flags, void* param)
 {
@@ -50,50 +101,7 @@ void mouseEvent(int evt, int x, int y, int flags, void* param)
 
     if(vec_corners.size() == 4 && flag_is_written == false)
     {
-        float obj_width = 220; // 220mm
-        float obj_height = 240; // 240mm
-
-        // intrinsics
-        double K_[3][3] =
-        { {881.68473, 0, 398.14820},
-        {0,  884.03796, 289.57924},
-        {0,   0,   1} };
-
-        Mat mat_intrinsics = cv::Mat(3, 3, CV_64F, K_).clone();
-
-
-
-        // extrinsics
-        Mat mat_extrinsics = Mat::zeros(3, 4, CV_64F);
-        mat_extrinsics.at<double>(2, 3) = 400;  // 400mm
-        tf::Matrix3x3 rotMatrix;
-        rotMatrix.setRPY(PI, 0, PI/2.0);
-        rotMatrix = rotMatrix.inverse();
-
-        for(int i; i<3; i++)
-        {
-            mat_extrinsics.at<double>(i, 0) = rotMatrix.getRow(i).getX();
-            mat_extrinsics.at<double>(i, 1) = rotMatrix.getRow(i).getY();
-            mat_extrinsics.at<double>(i, 2) = rotMatrix.getRow(i).getZ();
-
-        }
-
-        // distortion coeffs
-        double dC[5] = {0.09026, -0.13131, 0.00076, 0.00090, 0};
-        Mat mat_distCoeffs = cv::Mat(5, 1, CV_64F, dC).clone();
-
-
-        // write vec to file
-        std::string fileName = "data/book.yml";
-        FileStorage fs(fileName, FileStorage::WRITE);
-        fs << "objWidth" << obj_width;
-        fs << "objHeight" << obj_height;
-        fs << "corners" << vec_corners;
-        fs << "intrinsics" << mat_intrinsics;
-        fs << "extrinsics" << mat_extrinsics;
-        fs << "distCoeffs" << mat_distCoeffs;
-        fs.release();
-        std::cout<< fileName << " is generated." << std::endl;
+        outputParam();
 
         flag_is_written = true;
     }
@@ -105,7 +113,7 @@ void mouseEvent(int evt, int x, int y, int flags, void* param)
 
 int main(int argc, char** argv)
 {
-    bool flag_use_image = true;
+    int flag_use_image = 0;
     if( argc != 2 )
       {
         std::cout<< "Usage: ./init num" << std::endl;
@@ -122,7 +130,7 @@ int main(int argc, char** argv)
         }
         else if(val == "1")
         {
-            flag_use_image = false;
+            flag_use_image = 1;
         }
         else
         {
@@ -130,14 +138,14 @@ int main(int argc, char** argv)
         }
     }
 
+    std::string winName = "Image";
+    namedWindow(winName, WINDOW_NORMAL);
+    mat_canvas = imread( "data/book.jpg");
 
 
-
-    if(flag_use_image == true)
+    if(flag_use_image == 0)
     {
-        std::string winName = "Image";
-        namedWindow(winName, WINDOW_NORMAL);
-        mat_canvas = imread( "data/book.jpg");
+
 
 
         setMouseCallback(winName, mouseEvent);

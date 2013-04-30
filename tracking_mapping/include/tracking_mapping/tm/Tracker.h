@@ -36,6 +36,7 @@ public:
                             );
 
     Mat mat_image_current;
+
     Mat mat_image_previous;
     Mat mat_keyImage_current;
     Mat mat_keyImage_previous;
@@ -61,7 +62,8 @@ public:
     std::vector<uchar> of_status;
     std::vector<float> of_error;
 
-    Camera camera;
+    Camera camera, cam_groundTruth;
+    std::string info_current_cam;
     Initializer initializer;
 
     std::string text_state;

@@ -340,6 +340,24 @@ namespace jlUtilities
     
     
   }
+
+  void tfScalarArrayToPose(tfScalar arr[], geometry_msgs::PoseStamped &pose)
+  {
+      tfScalar roll, pitch, yaw;
+
+      tf::Quaternion q;
+      roll = pcl::deg2rad(arr[3]);
+      pitch = pcl::deg2rad(arr[4]);
+      yaw = pcl::deg2rad(arr[5]);
+
+
+      q.setRPY(roll, pitch, yaw);
+      pose.pose.position.x = arr[0];
+      pose.pose.position.y = arr[1];
+      pose.pose.position.z = arr[2];
+      tf::quaternionTFToMsg(q, pose.pose.orientation);
+
+  }
       
   void appendBtscalarArrayToString(tfScalar arr[], std::string &str)
   {
@@ -404,6 +422,32 @@ namespace jlUtilities
       msg.header.stamp = stampedTF.stamp_;
       msg.header.frame_id = stampedTF.frame_id_;
   }
+
+//  //-- str: contains folder and file name, eg. data/metric/image_0_0_770_90.jpg
+//  //-- image_x_y_z_angX_angY_angZ  // in cam coords
+//  //-- flag_test: for image_x_y_z_angY situation
+//  void poseToTF(std::string &str,
+//                std::string &strPrefix,
+//                std::string &strSuffix,
+//                tf::Transform &trans, std::string sep, bool flag_test)
+//  {
+//      std::string fileFolder, fileName;
+//      splitFilePath(str, fileFolder, fileName);
+//      // Now we get: image_0_0_770_90.jpg
+
+//      if(flag_test == true)
+//      {
+//          size_t found;
+//          found=str.find_last_of("/\\");
+//          fileFolder = str.substr(0,found);
+//          fileName = str.substr(found+1);
+//      }
+//      else
+//      {
+
+//      }
+
+//  }
 
   void eigenMatrix4fToTransform(Eigen::Matrix4f &m, tf::Transform &t)
   {
@@ -511,6 +555,8 @@ namespace jlUtilities
     std::cout<< "Loading " << tArray.size() << " matrix completed" << std::endl;
     
   }
+
+
 
 
   

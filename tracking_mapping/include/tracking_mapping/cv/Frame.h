@@ -27,7 +27,8 @@ public:
     int img_width, img_height;
     size_t frame_counter;    //!!! Need to add a function to check boundary
     // can't be filled in buildFrameFromImage()
-    Camera camera;
+    Camera camera, cam_groundTruth;
+
 
     //-- CV
 

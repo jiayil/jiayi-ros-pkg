@@ -22,6 +22,8 @@
 
 #include "tracking_mapping/tm/Tracker.h"
 
+#include <ctime>
+
 class System
 {
 public:
@@ -36,7 +38,8 @@ private:
     ros::Publisher pub_path_cam_;
 
 
-    tf::Transform tfCam;    // cam in obj
+    tf::Transform tfCam;    // obj in cam
+    tf::Transform tfCamGroundTruth;
     tf::Transform tfOpticalInLocal, tfObjInWorld;
     tf::TransformBroadcaster br;
     nav_msgs::Odometry odomCam_;
@@ -46,6 +49,11 @@ private:
     Tracker tracker_;
 
     cv_bridge::CvImage image_test;
+
+    //-- Profiling
+    clock_t start_time, finish_time;
+    double elapsed_time;
+    double fps;         // keep a running avg for frames per sec
 
     void imageCallback(const sensor_msgs::ImageConstPtr & msg);
 

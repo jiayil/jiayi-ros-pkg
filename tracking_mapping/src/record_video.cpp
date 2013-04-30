@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
+#include <boost/lexical_cast.hpp>
 
 using namespace cv;
 
@@ -15,6 +16,11 @@ int main()
     Mat frame;
     char key;
     bool flag_record = false;
+
+    std::string imgName_prefix = "data/image_0_0_";
+    std::string imgName_suffix = "_0_0_0.jpg";
+    std::string imgName;
+    size_t imgName_cnt = 80;
 
     while (1)
     {
@@ -32,10 +38,19 @@ int main()
             flag_record = true;
             printf("Start recording...\n");
         }
-        else if(key == 's')
+        else if(key == 'e')
         {
             flag_record = false;
-            printf("Stop recording...\n");
+            printf("End recording...\n");
+        }
+        else if(key == 's')
+        {
+            imgName = imgName_prefix +
+                    boost::lexical_cast<std::string>(imgName_cnt) +
+                    imgName_suffix;
+            imgName_cnt += 5;
+            imwrite( imgName, frame );
+            printf("Take snapshot %s ... Done\n", imgName.c_str());
         }
         if(flag_record == true)
             writer << frame;

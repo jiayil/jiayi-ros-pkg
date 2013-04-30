@@ -16,6 +16,7 @@ class Pattern : public Frame
 {
 public:
     Pattern();
+    void buildPatternFromImage(Mat &img);
 
     enum pattern_state_id
     {

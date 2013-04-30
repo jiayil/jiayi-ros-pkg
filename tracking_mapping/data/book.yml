@@ -1,7 +1,7 @@
 %YAML:1.0
-objWidth: 220.
-objHeight: 240.
-corners: [ 196, 18, 697, 18, 703, 581, 183, 571 ]
+objWidth: 216.
+objHeight: 279.
+corners: [ 234, 5, 579, 8, 566, 445, 236, 442 ]
 intrinsics: !!opencv-matrix
    rows: 3
    cols: 3
@@ -14,7 +14,7 @@ extrinsics: !!opencv-matrix
    dt: d
    data: [ 6.1232339957367660e-17, 1., 0., 0., 1.,
        -6.1232339957367660e-17, 1.2246467991473532e-16, 0.,
-       1.2246467991473532e-16, -7.4987989133092880e-33, -1., 400. ]
+       1.2246467991473532e-16, -7.4987989133092880e-33, -1., 595. ]
 distCoeffs: !!opencv-matrix
    rows: 5
    cols: 1

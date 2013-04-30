@@ -85,6 +85,7 @@ void foutAppendTF(tf::Transform &transform, std::ofstream &fout);
 void foutAppendPose(geometry_msgs::PoseStamped &pose, std::ofstream &fout);
 
 void poseStampedToBtscalarArray(geometry_msgs::PoseStamped &pose, tfScalar arr[]);
+void tfScalarArrayToPose(tfScalar arr[], geometry_msgs::PoseStamped &pose);
 void appendBtscalarArrayToString(tfScalar arr[], std::string &str);
 
 void foutAppendTFStamped(geometry_msgs::TransformStamped &transform, 
@@ -93,6 +94,9 @@ void foutAppendTFStamped(geometry_msgs::TransformStamped &transform,
 void tfToPose(tf::StampedTransform &stampedTF, geometry_msgs::Pose &msg);
 void tfToPose(tf::Transform &trans, geometry_msgs::PoseStamped &msg);
 void tfToPose(tf::StampedTransform &stampedTF, geometry_msgs::PoseStamped &msg);
+//void poseToTF(std::string &str, std::string &strPrefix, std::string &strSuffix,
+//              tf::Transform &trans, std::string sep = std::string("_"), bool flag_test=false);
+
 void eigenMatrix4fToTransform(Eigen::Matrix4f &m, tf::Transform &t);
 tf::Transform eigenMatrix4fToTransform(Eigen::Matrix4f &m);
 void transformToEigenMatrix4f(tf::Transform &t, Eigen::Matrix4f &m);
@@ -105,6 +109,28 @@ void profilingLoggerCurrentTimeDuration(ros::Time currentTime,
 
 void loadXYZRPYs(std::string &filePath, 
                  std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> > &tArray);
+inline float rad2deg(float alpha)
+{
+  return alpha*57.29578f;
+}
 
+inline float deg2rad(float alpha)
+{
+  return alpha*0.017453293f;
+}
+
+inline double rad2deg(double alpha)
+{
+  return alpha*57.29578;
+}
+
+inline double deg2rad(double alpha)
+{
+  return alpha*0.017453293;
+}
+inline static double square(int a)
+{
+return a * a;
+}
 }
 #endif

@@ -28,5 +28,6 @@ Camera& Camera::operator =(const Camera& cam)
     mat_extrinsics = cam.mat_extrinsics.clone();
     mat_distCoeffs = cam.mat_distCoeffs.clone();
     mat_transform  = cam.mat_transform.clone();
+
     K = cam.K.clone();
 }

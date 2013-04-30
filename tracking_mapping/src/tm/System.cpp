@@ -34,6 +34,8 @@ System::System()
 //    tfOpticalInLocal = tfOpticalInLocal.inverse();
 
 
+    fps = 30;
+
     printf("System constructed.\n");
 }
 
@@ -55,6 +57,9 @@ void System::run()
 
 void System::imageCallback(const sensor_msgs::ImageConstPtr &msg)
 {
+    start_time = clock();
+    tracker_.text_state.clear();
+
     // Prepare images
     // Seperate ROS framework and this tracking/mapping framework
     // Keep ROS stuff here in System
@@ -72,6 +77,7 @@ void System::imageCallback(const sensor_msgs::ImageConstPtr &msg)
     //            tracker_.mat_image_previous = cv_ptr->image.clone();
     //            tracker_.mat_keyImage_previous = cv_ptr->image.clone();
                 tracker_.mat_image_current = cv_ptr->image.clone();
+                tracker_.info_current_cam = msg->header.frame_id;
 
                 FastFeatureDetector ffd;
                 ffd.detect(tracker_.mat_image_previous, tracker_.vecKeypointsPrevious);
@@ -93,6 +99,7 @@ void System::imageCallback(const sensor_msgs::ImageConstPtr &msg)
             cv_ptr = cv_bridge::toCvCopy(msg, "bgr8");
             //ROS_INFO("%s", cv_ptr->encoding.c_str());
             tracker_.mat_image_current = cv_ptr->image.clone();
+            tracker_.info_current_cam = msg->header.frame_id;
         }
         catch (cv_bridge::Exception& e)
         {
@@ -130,24 +137,39 @@ void System::imageCallback(const sensor_msgs::ImageConstPtr &msg)
 
             Mat M = tracker_.camera.mat_transform;
 
-            tfCam.setOrigin(  tf::Vector3(M.at<double>(0, 3),
-                                          M.at<double>(1, 3),
-                                          M.at<double>(2, 3) ));
+            tfCam.setOrigin(  tf::Vector3(M.at<double>(0, 3)/1000.0,
+                                          M.at<double>(1, 3)/1000.0,
+                                          M.at<double>(2, 3)/1000.0 ));
 
 
-            btMatrix3x3 rot;
+            tf::Matrix3x3 rot;
             rot.setValue(M.at<double>(0, 0), M.at<double>(0, 1), M.at<double>(0, 2),
                          M.at<double>(1, 0), M.at<double>(1, 1), M.at<double>(1, 2),
                          M.at<double>(2, 0), M.at<double>(2, 1), M.at<double>(2, 2));
 //            rot = rot.inverse();
-            btQuaternion q;
+            tf::Quaternion q;
             rot.getRotation(q);
 
             tfCam.setRotation( q );
+
+            //////////////////////////////////////
+
             tfCam = tfCam.inverse();
+            //////////////////////////////////////
+
 //            tfCam *= tfOpticalInLocal;
             ros::Time t = ros::Time::now();
             br.sendTransform(tf::StampedTransform(tfCam, t, "world", "cam"));
+
+            tfScalar roll, pitch, yaw;
+            rot.getRPY(roll, pitch, yaw);
+            printf("%f %f %f %f %f %f\n",
+                   tfCam.getOrigin().x(),
+                   tfCam.getOrigin().y(),
+                   tfCam.getOrigin().z(),
+                   jlUtilities::rad2deg(roll),
+                   jlUtilities::rad2deg(pitch),
+                   jlUtilities::rad2deg(yaw));
 
             //-- Pub odom
             jlUtilities::tfToPose(tfCam, poseStampedCam_);
@@ -167,6 +189,19 @@ void System::imageCallback(const sensor_msgs::ImageConstPtr &msg)
             pathCam_.poses.push_back(poseStampedCam_);
             pub_path_cam_.publish(pathCam_);
 
+            char sz[80];
+            sprintf(sz, "Matches: %d ",
+                    tracker_.initializer.matches.size());
+            tracker_.text_state = sz;
+
+            sprintf(sz, "Pose: %.1f %.1f %.1f %d %d %d ",
+                   tfCam.getOrigin().x(),
+                   tfCam.getOrigin().y(),
+                   tfCam.getOrigin().z(),
+                   (int)(jlUtilities::rad2deg(roll)),
+                   (int)jlUtilities::rad2deg(pitch),
+                   (int)(jlUtilities::rad2deg(yaw)));
+            tracker_.text_state += sz;
         }
 
     }
@@ -201,6 +236,23 @@ void System::imageCallback(const sensor_msgs::ImageConstPtr &msg)
 
 
 
+
+
+    //////////////////////////////
+    // Calculate frame rate and write that onto displayed image
+    finish_time = clock();
+    elapsed_time = (double(finish_time)-double(start_time))/CLOCKS_PER_SEC;
+    start_time = finish_time;
+
+    fps = 0.9*fps + 0.1*(1/elapsed_time);
+    char sz[80];
+    sprintf(sz, "FPS: %.0f ", fps);
+
+    tracker_.text_state += sz;
+
+    myutils::putStatus(tracker_.mat_image_canvas,
+                       tracker_.text_state);
+
     // Show canvas
     image_test.header = msg->header;
     image_test.encoding = "bgr8";
@@ -208,6 +260,5 @@ void System::imageCallback(const sensor_msgs::ImageConstPtr &msg)
 
 
     pub_image_preview_.publish(image_test.toImageMsg());
-
 
 }

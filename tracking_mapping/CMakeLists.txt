@@ -57,12 +57,15 @@ rosbuild_add_executable(tracking2 src/tracking2.cpp)
 # video
 rosbuild_add_executable(record_video src/record_video.cpp)
 rosbuild_add_executable(broadcast_video src/broadcast_video.cpp)
+# log
+#rosbuild_add_executable(log_sys src/log_sys.cpp)
 # t_m
 rosbuild_add_executable(tracking_mapping ${T_M_SOURCE_FILES} )
 rosbuild_add_executable(tracking_mapping ${T_M_SOURCE_FILES} ${T_M_HEADER_FILES} )
 # t_m init
 rosbuild_add_executable(init_featrues src/init_featrues.cpp)
 rosbuild_add_executable(init src/init.cpp)
+
 # ROS/VTK
 
 rosbuild_add_executable(show_vtk src/show_vtk.cpp)

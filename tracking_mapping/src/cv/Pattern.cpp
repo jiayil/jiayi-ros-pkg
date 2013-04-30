@@ -53,15 +53,15 @@ Pattern::Pattern()
     {
         printf("Pattern: %s is read in for feature initialization.\n", file_name.c_str());
 
-        buildFrameFromImage(img_disk);
+        buildPatternFromImage(img_disk);
 
-        obj_width *= 5.0;
-        obj_height *= 5.0;
+        // arbitrary scaling for better trajectory visualization
+//        obj_width *= 5.0;
+//        obj_height *= 5.0;
 
         //-- set up the scale and centroid
         // scale unit: mm/pix
-        scale = obj_width / jlUtilities::compute_magnitude(vec_corners[0],
-                                                           vec_corners[1]);
+        scale = obj_width / (vec_corners[2].x - vec_corners[0].x);
         obj_img_center = jlUtilities::compute_centroid(vec_corners[0],
                                                      vec_corners[2]);
 
@@ -95,5 +95,34 @@ Pattern::Pattern()
         printf("Pattern: Error! Failed to open image: %s\n", file_name.c_str());
         current_state = PATTERN_STATE_FAILED;
     }
+
+}
+
+void Pattern::buildPatternFromImage(Mat &img)
+{
+    mat_image = img.clone();
+    cvtColor( mat_image, mat_image_gray, CV_BGR2GRAY );
+    img_width = mat_image.cols;
+    img_height = mat_image.rows;
+    frame_counter++;
+
+    vec_matchedFeaturePoints.clear();
+
+    //-- CV
+
+    cv::Mat imageROI;
+    imageROI = mat_image_gray(cv::Rect(vec_corners[0], vec_corners[2]));
+
+
+    detector.detect( imageROI, vec_keypoints );
+    for(size_t i=0; i<vec_keypoints.size(); i++)
+    {
+        vec_keypoints[i].pt += vec_corners[0];
+    }
+
+
+    extractor.compute( mat_image_gray, vec_keypoints, mat_descriptors );
+
+    printf("Keypoints size: %d.\n", vec_keypoints.size());
 
 }

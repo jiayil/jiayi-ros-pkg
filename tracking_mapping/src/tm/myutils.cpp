@@ -83,8 +83,8 @@ void putStatus(cv::Mat &img, std::string & str)
 {
     Scalar color_state = Scalar(255, 0, 0);
     int fontFace = FONT_HERSHEY_SIMPLEX;
-    double fontScale = 1;
-    int thickness = 2;
+    double fontScale = 0.5;
+    int thickness = 1;
     int baseline=0;
     Size textSize = getTextSize(str, fontFace, fontScale, thickness, &baseline);
     baseline += thickness;

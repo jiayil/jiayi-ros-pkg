@@ -56,7 +56,7 @@ bool Initializer::process(cv::Mat &image)
 
     //-- Fill up the frame
     current_frame.buildFrameFromImage(image);
-    printf("Initializer: img counter: %d\n", current_frame.frame_counter);
+//    std::cout << "Initializer: img counter: " << current_frame.frame_counter << std::endl;
 
     //-- Match features
     matchFeatures();
@@ -89,14 +89,20 @@ bool Initializer::process(cv::Mat &image)
     cv::perspectiveTransform(pattern.vec_matchedFeaturePoints,
                              pattern.vec_matchedFeaturePoints_currentImg,
                              H);
+    cv::perspectiveTransform(pattern.vec_corners,
+                             pattern.vec_corners_currentImg,
+                             H);
 
     //-- Compute 3D locations of Pattern's matched features in the current image
     computeLocation3D(pattern.vec_matchedFeaturePoints,
                       pattern.vec_obj_matchedFeaturePoints3d,
+//                      Point2f(400, 300),
                       pattern.obj_img_center,
                       pattern.scale);
 
-
+//    printf("center x: %d, y: %d\n",
+//           pattern.obj_img_center.x,
+//           pattern.obj_img_center.y);
 
 
 
@@ -182,7 +188,7 @@ bool Initializer::computeHomography(Mat &H)
     }
 
     matches.swap(inliers);
-    printf("inliers size: %d\n", matches.size());
+//    printf("inliers size: %d\n", matches.size());
     return matches.size() >= 4;
 }
 
@@ -194,7 +200,7 @@ bool Initializer::computePoseCorners(std::vector<cv::Point3f> &pts3D,
     cv::Mat_<float> Tvec;
     cv::Mat raux, taux;
 
-    std::cout<< counter << std::endl;
+//    std::cout<< counter << std::endl;
     counter++;
     cv::solvePnPRansac(pts3D,
                  pts2D,
@@ -202,7 +208,7 @@ bool Initializer::computePoseCorners(std::vector<cv::Point3f> &pts3D,
                  pattern.camera.mat_distCoeffs,
                  raux,
                  taux);
-    std::cout<< "finish pnp" << std::endl;
+//    std::cout<< "finish pnp" << std::endl;
     //-- Matrix conversion
     raux.convertTo(Rvec,CV_32F);
     taux.convertTo(Tvec ,CV_32F);
@@ -216,6 +222,7 @@ bool Initializer::computePoseCorners(std::vector<cv::Point3f> &pts3D,
         return false;
     }
 
+//    Matx44d M;
     Matx34d M;
     // Copy to transformation matrix
     for (int row=0; row<3; row++)
@@ -225,10 +232,13 @@ bool Initializer::computePoseCorners(std::vector<cv::Point3f> &pts3D,
           // Copy rotation component
           M(row, col) = rotMat(row, col);
       }
-      M(row, 3) = Tvec(row)/1000.0; // Copy translation component
+      M(row, 3) = Tvec(row); // Copy translation component
     }
+//    M(3, 3) = 1;
+
     pattern.camera.mat_transform = Mat(M);
-    std::cout << pattern.camera.mat_transform << std::endl;
+
+//    std::cout << pattern.camera.mat_transform << std::endl;
     return true;
 }
 

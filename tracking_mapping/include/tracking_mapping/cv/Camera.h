@@ -19,10 +19,11 @@ public:
 
     cv::Mat mat_intrinsics, mat_extrinsics;
     cv::Mat mat_distCoeffs;
-    cv::Mat mat_transform;  // in obj coords
+    cv::Mat mat_transform;  // obj in cam coords
 
 
-    cv::Mat K;
+
+    cv::Mat K;  // not used currently
 
 };
 #endif // CAMERA_H
