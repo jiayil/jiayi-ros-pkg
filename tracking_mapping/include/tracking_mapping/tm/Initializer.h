@@ -13,6 +13,8 @@
 #include "tracking_mapping/cv/Frame.h"
 #include "tracking_mapping/cv/Pattern.h"
 
+#include "tracking_mapping/cv/Dataset.h"
+
 #include "tracking_mapping/cv/FindCCC.h"
 #include "tracking_mapping/cv/InterestPoints.h"
 #include "tracking_mapping/cv/Pose.h"
@@ -30,13 +32,16 @@ public:
     bool computeHomography(Mat &H);
     void computePose();
     bool computePoseCorners(std::vector<cv::Point3f> &pts3D,
-                            std::vector<cv::Point2f> &pts2D);
+                            std::vector<cv::Point2f> &pts2D,
+                            bool flag_useRANSAC);
     void computeLocation3D(std::vector<cv::Point2f> &pts2D,
                            std::vector<cv::Point3f> &pts3D,
                            cv::Point2f centerPoint,
                            float scale);
 
 
+    bool processOnDataset(cv::Mat &mat_image);
+    bool processOnDataset();
 //    FindCCC findCCC;
 //    PoseCCC poseCCC;
 //    InterestPoints interestPoints;
@@ -56,6 +61,8 @@ public:
 
     Pattern pattern;
     Frame current_frame;
+
+    Dataset dataset;
 
     const static float min_match_ratio = 0.6f;
     std::vector< cv::DMatch > matches;

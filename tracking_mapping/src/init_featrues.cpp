@@ -50,9 +50,9 @@ int main(int argc, char** argv)
     if(flag_use_image == true)
     {
         namedWindow("Keypoints", WINDOW_NORMAL);
-        Mat mat_image = imread( "../data/cam_spf2.jpg", CV_LOAD_IMAGE_GRAYSCALE );
+        Mat mat_image = imread( "../data/book_dip.jpg", CV_LOAD_IMAGE_GRAYSCALE );
         int num_vecKeypoints;
-        int num_trackingPoints = 50;
+        int num_trackingPoints = 500;
         Mat mat_descriptors;
 
         //-- Step 1: Detect the keypoints using Detector
@@ -60,15 +60,16 @@ int main(int argc, char** argv)
 
 
 
-
-
-        OrbFeatureDetector detector;
+FastFeatureDetector detector;
+//        SurfFeatureDetector detector;
+//        OrbFeatureDetector detector;
         OrbDescriptorExtractor extractor;
 
         std::vector<KeyPoint> vec_keypoints, vec_goodKeypoints;
 
         detector.detect( mat_image, vec_keypoints );
         num_vecKeypoints = vec_keypoints.size();
+        std::cout<< "feature num: " << num_vecKeypoints << std::endl;
 
         std::sort(vec_keypoints.begin(), vec_keypoints.end(),
                   jlUtilities::sort_feature_response);
@@ -84,12 +85,12 @@ int main(int argc, char** argv)
         extractor.compute( mat_image, vec_keypoints, mat_descriptors );
 
 
-        // write mat to file
-        std::string fileName = "mat_descriptors.yml";
-        FileStorage fs(fileName, FileStorage::WRITE);
-        fs << "descriptors" << mat_descriptors;
-        fs.release();
-        std::cout<< fileName << " is generated." << std::endl;
+//        // write mat to file
+//        std::string fileName = "mat_descriptors.yml";
+//        FileStorage fs(fileName, FileStorage::WRITE);
+//        fs << "descriptors" << mat_descriptors;
+//        fs.release();
+//        std::cout<< fileName << " is generated." << std::endl;
 
 //        Mat copy;
 //        FileStorage fs2("mat_descriptors.yml", FileStorage::READ);
@@ -121,7 +122,9 @@ int main(int argc, char** argv)
         drawKeypoints( mat_image, vec_keypoints, mat_kpImage,
                        Scalar::all(-1), DrawMatchesFlags::DEFAULT );
 
-        for (int i=0; i<num_trackingPoints; i++)	{
+        for (int i=0; i<num_vecKeypoints; i++)
+//        for (int i=0; i<num_trackingPoints; i++)
+        {
             cv::circle(mat_kpImage,
                 vec_keypoints[i].pt,	// center
                 3,							// radius
@@ -140,7 +143,7 @@ int main(int argc, char** argv)
 
         //-- Show detected (drawn) keypoints
         imshow("Keypoints", mat_kpImage );
-
+        imwrite("fast_features_dip.jpg", mat_kpImage);
         waitKey(0);
 
     }

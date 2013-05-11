@@ -13,3 +13,4 @@ lib/
 */srv_gen/
 data/
 *.avi
+doxygen/

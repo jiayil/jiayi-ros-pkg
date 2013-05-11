@@ -18,6 +18,7 @@ Tracker::Tracker()
 {
     flag_first_image = true;
     current_state = TRCK_STATE_INITING;
+    camera = initializer.pattern.camera;
 
     if(initializer.current_state == initializer.INIT_STATE_SUCCESS)
     {
@@ -54,11 +55,16 @@ bool Tracker::init(int mode)
     // !!! Later, member function .mode  needs to be integrated
     if(mode == 0)
     {
+        fFound = initializer.processOnDataset(mat_image_current);
 //        fFound = initializer.findCCC.process(imageInputGray, targets);
     }
     else if(mode == 1)
     {
         fFound = initializer.process(mat_image_current);
+    }
+    else if(mode == -1)
+    {
+        fFound = initializer.processOnDataset();
     }
 //    drawKeypoints( mat_image_current, initializer.current_frame.vec_keypoints, mat_image_canvas,
 //                   Scalar::all(-1), DrawMatchesFlags::DEFAULT );
@@ -108,6 +114,7 @@ bool Tracker::init(int mode)
 
     if(fFound)
     {
+//        jlUtilities::draw_pointCoord(mat_image_canvas, initializer.pattern.vec_corners_currentImg);
 //        // check
         jlUtilities::draw_2dContour(mat_image_canvas,
                                     initializer.pattern.vec_corners_currentImg,

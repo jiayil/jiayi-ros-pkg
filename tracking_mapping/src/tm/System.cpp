@@ -11,8 +11,8 @@
 
 #include "tracking_mapping/tm/System.h"
 #include "tracking_mapping/tm/myutils.h"
-
 #include "jlUtilities/jlUtilities.h"
+#include "jlUtilities/opencv_helper.h"
 
 
 System::System()
@@ -20,14 +20,14 @@ System::System()
     image_transport::ImageTransport it(nh_);
     std::string topic = std::string("/image_raw");
     sub_image_ = it.subscribe(topic,
-                              1,
+                              10,
                               &System::imageCallback,
                               this,
                               image_transport::TransportHints("compressed", ros::TransportHints().tcpNoDelay(true)));
-    pub_image_preview_ = it.advertise("image_preview", 1);
+    pub_image_preview_ = it.advertise("image_preview", 10);
 
-    pub_odom_cam_ = nh_.advertise<nav_msgs::Odometry>("odom_cam", 1);
-    pub_path_cam_ = nh_.advertise<nav_msgs::Path>("path_cam", 1);
+    pub_odom_cam_ = nh_.advertise<nav_msgs::Odometry>("odom_cam", 10);
+    pub_path_cam_ = nh_.advertise<nav_msgs::Path>("path_cam", 10);
 
     tfOpticalInLocal.setOrigin(  tf::Vector3(0.0, 0.0, 0.0) );
     tfOpticalInLocal.setRotation( tf::Quaternion(-0.5, 0.5, -0.5, 0.5) );
@@ -79,6 +79,11 @@ void System::imageCallback(const sensor_msgs::ImageConstPtr &msg)
                 tracker_.mat_image_current = cv_ptr->image.clone();
                 tracker_.info_current_cam = msg->header.frame_id;
 
+                //-- need to be replaced by Frame
+                jlUtilities::undistortFrame(tracker_.mat_image_current,
+                                      tracker_.camera.mat_intrinsics,
+                                      tracker_.camera.mat_distCoeffs);
+
                 FastFeatureDetector ffd;
                 ffd.detect(tracker_.mat_image_previous, tracker_.vecKeypointsPrevious);
 
@@ -100,6 +105,11 @@ void System::imageCallback(const sensor_msgs::ImageConstPtr &msg)
             //ROS_INFO("%s", cv_ptr->encoding.c_str());
             tracker_.mat_image_current = cv_ptr->image.clone();
             tracker_.info_current_cam = msg->header.frame_id;
+
+            //-- need to be replaced by Frame
+            jlUtilities::undistortFrame(tracker_.mat_image_current,
+                                  tracker_.camera.mat_intrinsics,
+                                  tracker_.camera.mat_distCoeffs);
         }
         catch (cv_bridge::Exception& e)
         {
@@ -117,8 +127,9 @@ void System::imageCallback(const sensor_msgs::ImageConstPtr &msg)
     if(tracker_.current_state == tracker_.TRCK_STATE_INITING)
     {
         // 1: a book cover
-        // 0: Dr. Hoff's pattern
-        if(tracker_.init(1) == true)
+        // 0: Dataset UCSB
+        // -1: Dataset Homography UCSB
+        if(tracker_.init(0) == true)
         {
             tracker_.current_state = tracker_.TRCK_STATE_GOOD;
         }
@@ -154,7 +165,7 @@ void System::imageCallback(const sensor_msgs::ImageConstPtr &msg)
 
             //////////////////////////////////////
 
-            tfCam = tfCam.inverse();
+//            tfCam = tfCam.inverse();
             //////////////////////////////////////
 
 //            tfCam *= tfOpticalInLocal;
@@ -163,13 +174,14 @@ void System::imageCallback(const sensor_msgs::ImageConstPtr &msg)
 
             tfScalar roll, pitch, yaw;
             rot.getRPY(roll, pitch, yaw);
-            printf("%f %f %f %f %f %f\n",
+            printf("%f %f %f %f %f %f %d\n",
                    tfCam.getOrigin().x(),
                    tfCam.getOrigin().y(),
                    tfCam.getOrigin().z(),
                    jlUtilities::rad2deg(roll),
                    jlUtilities::rad2deg(pitch),
-                   jlUtilities::rad2deg(yaw));
+                   jlUtilities::rad2deg(yaw),
+                   tracker_.initializer.matches.size());
 
             //-- Pub odom
             jlUtilities::tfToPose(tfCam, poseStampedCam_);

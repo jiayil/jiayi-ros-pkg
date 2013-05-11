@@ -34,9 +34,14 @@ int main(int argc, char** argv)
     ros::Subscriber sub_path_cam_ = nh.subscribe("path_cam", 10, &camPathCallback);
 
     image_transport::ImageTransport it(nh);
-    image_transport::Publisher pub = it.advertise("/image_raw", 1);
+    image_transport::Publisher pub = it.advertise("/image_raw", 10);
     cv_bridge::CvImage cvbridgeImg;
     cvbridgeImg.encoding = "bgr8";
+
+    std::string imgName_prefix = "data/image_";
+    std::string imgName_suffix = ".jpg";
+    std::string imgName;
+    size_t imgName_cnt = 0;
 
     Mat frame;
     char key;
@@ -45,7 +50,8 @@ int main(int argc, char** argv)
         SYS_STATE_READY,
         SYS_STATE_TRACKING,
         SYS_STATE_PAUSE,
-        SYS_STATE_SLIDE
+        SYS_STATE_SLIDE,
+        SYS_STATE_STARTWITHPAUSE
     };
     sys_state_id current_state = SYS_STATE_READY;
 
@@ -79,7 +85,7 @@ int main(int argc, char** argv)
     }
     else if(argc == 2 && val == "2" )
     {
-        fileName = "data/metric/ad_0_0_770_0.jpg";
+        fileName = "data/book.jpg";
         frame = imread(fileName);
         current_state = SYS_STATE_PAUSE;
     }
@@ -90,6 +96,24 @@ int main(int argc, char** argv)
         cap.open(fileName);
 
         current_state = SYS_STATE_READY;
+    }
+    else if(argc ==3 && val == "1")
+    {
+        fileName = argv[2];
+
+        cap.open(fileName);
+
+        current_state = SYS_STATE_READY;
+    }
+    else if(argc ==4 && val == "1") // pause when starting
+    {
+        fileName = argv[3];
+
+        cap.open(fileName);
+
+        printf("here here\n");
+
+        current_state = SYS_STATE_STARTWITHPAUSE;
     }
     else if(argc == 5)
     {
@@ -122,17 +146,12 @@ int main(int argc, char** argv)
         current_state = SYS_STATE_READY;
     }
 
-    if(frame.data == NULL && current_state != SYS_STATE_READY)
+    if(frame.data == NULL && !cap.isOpened())
     {
-        printf("%s not found.\n", fileName.c_str());
+        printf("%s not found (first).\n", fileName.c_str());
         return -1;
     }
 
-    if(!cap.isOpened() && current_state == SYS_STATE_READY)  // check if we succeeded
-    {
-        printf("%s not found.\n", fileName.c_str());
-        return -1;
-    }
 //    cap.set(CV_CAP_PROP_FRAME_WIDTH, 800);
 //    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 600);
 //    VideoWriter writer("VideoTest.avi", CV_FOURCC('M', 'J', 'P', 'G'), 25.0, Size(800, 600));
@@ -153,6 +172,12 @@ int main(int argc, char** argv)
                 printf("Video ends.\n");
                 break;
             }
+            ////////////////////////////////////////////
+            cvbridgeImg.header.frame_id = fileNum;
+            cvbridgeImg.header.stamp = ros::Time::now();
+            cvbridgeImg.image = frame;
+            pub.publish(cvbridgeImg.toImageMsg());
+            ////////////////////////////////////////////
 
         }
         else if(current_state == SYS_STATE_SLIDE && key == '=')
@@ -170,13 +195,27 @@ int main(int argc, char** argv)
                 printf("%s not found.\n", fileName.c_str());
                 break;
             }
+            ////////////////////////////////////////////
+            cvbridgeImg.header.frame_id = fileNum;
+            cvbridgeImg.header.stamp = ros::Time::now();
+            cvbridgeImg.image = frame;
+            pub.publish(cvbridgeImg.toImageMsg());
+            ////////////////////////////////////////////
         }
-        imshow("video", frame);
-        cvbridgeImg.header.frame_id = fileNum;
-        cvbridgeImg.header.stamp = ros::Time::now();
-        cvbridgeImg.image = frame;
+        else if(current_state == SYS_STATE_STARTWITHPAUSE)
+        {
+            cap >> frame;
+            current_state = SYS_STATE_PAUSE;
+            ////////////////////////////////////////////
+            cvbridgeImg.header.frame_id = fileNum;
+            cvbridgeImg.header.stamp = ros::Time::now();
+            cvbridgeImg.image = frame;
+            pub.publish(cvbridgeImg.toImageMsg());
+            ////////////////////////////////////////////
+        }
 
-        pub.publish(cvbridgeImg.toImageMsg());
+
+        imshow("video", frame);
 
 
         key = waitKey(timeWaitKey);
@@ -186,6 +225,7 @@ int main(int argc, char** argv)
         }
         else if(key == 'p') // pause
         {
+            printf("Pause\n");
             if(current_state == SYS_STATE_READY)
                 current_state = SYS_STATE_PAUSE;
             else if(current_state == SYS_STATE_PAUSE)
@@ -194,6 +234,7 @@ int main(int argc, char** argv)
         }
         else if(key == 'n')
         {
+            printf("Next\n");
             cap >> frame;
 
             if(frame.empty())
@@ -201,6 +242,31 @@ int main(int argc, char** argv)
                 printf("Video ends.\n");
                 break;
             }
+            ////////////////////////////////////////////
+            cvbridgeImg.header.frame_id = fileNum;
+            cvbridgeImg.header.stamp = ros::Time::now();
+            cvbridgeImg.image = frame;
+            pub.publish(cvbridgeImg.toImageMsg());
+            ////////////////////////////////////////////
+        }
+        else if(key == 'b') // broadcast the same frame
+        {
+            printf("Broadcast\n");
+            ////////////////////////////////////////////
+            cvbridgeImg.header.frame_id = fileNum;
+            cvbridgeImg.header.stamp = ros::Time::now();
+            cvbridgeImg.image = frame;
+            pub.publish(cvbridgeImg.toImageMsg());
+            ////////////////////////////////////////////
+        }
+        else if(key == 's')
+        {
+            imgName = imgName_prefix +
+                    boost::lexical_cast<std::string>(imgName_cnt) +
+                    imgName_suffix;
+            imgName_cnt += 5;
+            imwrite( imgName, frame );
+            printf("Take snapshot %s ... Done\n", imgName.c_str());
         }
     }
     std::cout<< "Finish playing." <<std::endl;

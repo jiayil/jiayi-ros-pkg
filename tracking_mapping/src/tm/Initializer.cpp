@@ -108,7 +108,8 @@ bool Initializer::process(cv::Mat &image)
 
     //-- Compute the camera pose
     bool find_pose = computePoseCorners(pattern.vec_obj_matchedFeaturePoints3d,
-                                        pattern.vec_matchedFeaturePoints_currentImg);
+                                        pattern.vec_matchedFeaturePoints_currentImg,
+                                        true);
     if(!find_pose)
     {
         current_state = INIT_STATE_SUCCESS;
@@ -193,7 +194,8 @@ bool Initializer::computeHomography(Mat &H)
 }
 
 bool Initializer::computePoseCorners(std::vector<cv::Point3f> &pts3D,
-                                     std::vector<cv::Point2f> &pts2D)
+                                     std::vector<cv::Point2f> &pts2D,
+                                     bool flag_useRANSAC)
 {
 
     cv::Mat Rvec;
@@ -202,12 +204,22 @@ bool Initializer::computePoseCorners(std::vector<cv::Point3f> &pts3D,
 
 //    std::cout<< counter << std::endl;
     counter++;
-    cv::solvePnPRansac(pts3D,
-                 pts2D,
-                 pattern.camera.mat_intrinsics,
-                 pattern.camera.mat_distCoeffs,
-                 raux,
-                 taux);
+    if(flag_useRANSAC == true)
+        cv::solvePnPRansac(pts3D,
+                           pts2D,
+                           pattern.camera.mat_intrinsics,
+                           Mat(),
+                           //                 pattern.camera.mat_distCoeffs,
+                           raux,
+                           taux);
+    else
+        cv::solvePnP(pts3D,
+                     pts2D,
+                     pattern.camera.mat_intrinsics,
+                     Mat(),
+                     //                 pattern.camera.mat_distCoeffs,
+                     raux,
+                     taux);
 //    std::cout<< "finish pnp" << std::endl;
     //-- Matrix conversion
     raux.convertTo(Rvec,CV_32F);
@@ -218,7 +230,8 @@ bool Initializer::computePoseCorners(std::vector<cv::Point3f> &pts3D,
 
     if(rotMat(0,0) == 1 && rotMat(1,1) == 1 && rotMat(2,2) == 1 )
     {
-        printf("Identity\n");
+//        printf("Identity\n");
+        printf("0 0 0 0 0 0 1\n");
         return false;
     }
 
@@ -274,4 +287,118 @@ void Initializer::computeLocation3D(std::vector<cv::Point2f> &pts2D,
         p.z = 0;
         pts3D.push_back(p);
     }
+}
+
+//-- UCSB Dataset
+bool Initializer::processOnDataset(cv::Mat &image)
+{
+    //-- Match features
+    matches.clear();
+
+    //-- Fill up the frame
+    current_frame.buildFrameFromImage(image, pattern.camera);
+//    std::cout << "Initializer: img counter: " << current_frame.frame_counter << std::endl;
+//    std::cout << "Initializer: cam: " << pattern.camera.mat_intrinsics << std::endl;
+
+    //-- Match features
+    matchFeatures();
+
+    if(matches.size() < 4)
+    {
+        printf("0 0 0 0 0 0 0\n");
+        current_state = INIT_STATE_SUCCESS;
+        return false;
+    }
+//printf("Match size: %d.\n", matches.size());
+    //-- Compute homography
+    Mat H;
+    bool find_H = computeHomography(H);
+    if(!find_H)
+    {
+        current_state = INIT_STATE_SUCCESS;
+        return false;
+    }
+
+    //-- (canceled) Warp pattern corners into the current image
+//    cv::perspectiveTransform(pattern.vec_corners,
+//                             pattern.vec_corners_currentImg,
+//                             H);
+//    for(int i; i<4; i++)
+//        std::cout<< pattern.vec_corners_currentImg[i].x << " " << pattern.vec_corners_currentImg[i].y << std::endl;
+//    std::cout<< H.inv() << std::endl;
+
+    //-- (instead) Warp all the matched points
+    cv::perspectiveTransform(pattern.vec_matchedFeaturePoints,
+                             pattern.vec_matchedFeaturePoints_currentImg,
+                             H);
+    cv::perspectiveTransform(pattern.vec_corners,
+                             pattern.vec_corners_currentImg,
+                             H);
+
+    //-- Compute 3D locations of Pattern's matched features in the current image
+    computeLocation3D(pattern.vec_matchedFeaturePoints,
+                      pattern.vec_obj_matchedFeaturePoints3d,
+//                      Point2f(400, 300),
+                      pattern.obj_img_center,
+                      pattern.scale);
+
+//    printf("center x: %d, y: %d\n",
+//           pattern.obj_img_center.x,
+//           pattern.obj_img_center.y);
+
+
+
+    //-- Compute the camera pose
+    bool find_pose = computePoseCorners(pattern.vec_obj_matchedFeaturePoints3d,
+                                        pattern.vec_matchedFeaturePoints_currentImg,
+//                                        current_frame.vec_matchedFeaturePoints,
+                                        true);
+    if(!find_pose)
+    {
+        current_state = INIT_STATE_SUCCESS;
+        return false;
+    }
+
+    current_state = INIT_STATE_POSE_COMPUTED;
+    return true;
+
+}
+bool Initializer::processOnDataset()
+{
+//    printf("Call %d\n", dataset.index);
+    Mat H = dataset.vec_H[dataset.index++].inv();
+
+//    std::cout<< H << std::endl;
+
+    cv::perspectiveTransform(pattern.vec_corners,
+                             pattern.vec_corners_currentImg,
+                             H);
+    pattern.vec_matchedFeaturePoints = pattern.vec_corners;
+    pattern.vec_matchedFeaturePoints_currentImg = pattern.vec_corners_currentImg;
+
+    //-- Compute 3D locations of Pattern's matched features in the current image
+    computeLocation3D(pattern.vec_matchedFeaturePoints,
+                      pattern.vec_obj_matchedFeaturePoints3d,
+//                      Point2f(400, 300),
+                      pattern.obj_img_center,
+                      pattern.scale);
+
+//    printf("center x: %d, y: %d\n",
+//           pattern.obj_img_center.x,
+//           pattern.obj_img_center.y);
+
+
+    //-- Compute the camera pose
+    bool find_pose = computePoseCorners(pattern.vec_obj_matchedFeaturePoints3d,
+                                        pattern.vec_matchedFeaturePoints_currentImg,
+                                        false);
+
+    if(!find_pose)
+    {
+        current_state = INIT_STATE_SUCCESS;
+        return false;
+    }
+
+    current_state = INIT_STATE_POSE_COMPUTED;
+    return true;
 }

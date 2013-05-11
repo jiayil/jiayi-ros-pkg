@@ -20,7 +20,7 @@ public:
     Frame();
     void buildFrameFromImage(Mat &img, Camera &cam);
     void buildFrameFromImage(Mat &img);
-
+    void undistortFrame(Mat& frame, Mat& matIntrin, Mat& matDist);
     //-- Physical
     Mat mat_image;
     Mat mat_image_gray;

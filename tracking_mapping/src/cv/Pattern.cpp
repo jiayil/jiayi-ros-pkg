@@ -25,6 +25,7 @@ Pattern::Pattern()
         fs["extrinsics"]    >> camera.mat_extrinsics;
         fs["corners"]       >> vec_corners;
         fs["distCoeffs"]    >> camera.mat_distCoeffs;
+        fs["scale"]         >> scale;
 
         fs.release();
 
@@ -34,7 +35,8 @@ Pattern::Pattern()
                   << "intrinsics:\n" << camera.mat_intrinsics << std::endl
                   << "extrinsics:\n" << camera.mat_extrinsics << std::endl
                   << "corners: " << vec_corners << std::endl
-                  << "distCoeffs:\n" << camera.mat_distCoeffs << std::endl;
+                  << "distCoeffs:\n" << camera.mat_distCoeffs << std::endl
+                  << "H_groundTruth:\n" << H_groundTruth << std::endl;
 
         printf("Pattern is constructed.\n");
         current_state = PATTERN_STATE_SUCCESS;
@@ -46,7 +48,7 @@ Pattern::Pattern()
     }
 
     //-- read in the training image
-    file_name = "data/book.jpg";
+    file_name = "data/book_canonical.jpg";
     Mat img_disk = imread( file_name);
 
     if(img_disk.data != NULL)
@@ -61,9 +63,18 @@ Pattern::Pattern()
 
         //-- set up the scale and centroid
         // scale unit: mm/pix
-        scale = obj_width / (vec_corners[2].x - vec_corners[0].x);
+        if(scale == 0)
+        {
+            scale = obj_width / (vec_corners[2].x - vec_corners[0].x);
+            obj_img_center = jlUtilities::compute_centroid(vec_corners[0],
+                                                           vec_corners[2]);
+        }
+//        obj_img_center.x = camera.mat_intrinsics.at<double>(0,2);
+//        obj_img_center.y = camera.mat_intrinsics.at<double>(1,2);
+
         obj_img_center = jlUtilities::compute_centroid(vec_corners[0],
-                                                     vec_corners[2]);
+                                                       vec_corners[2]);
+
 
 
 
@@ -78,11 +89,12 @@ Pattern::Pattern()
         //        vec_obj_corners3d.push_back(Point3f(obj_width/2.0f, -obj_height/2.0f, 0));
         //        vec_obj_corners3d.push_back(Point3f(-obj_width/2.0f, -obj_height/2.0f, 0));
 
-//        // obj coords; center
-//        vec_obj_corners3d.push_back(Point3f(-obj_width/2.0f, -obj_height/2.0f, 0));
-//        vec_obj_corners3d.push_back(Point3f(obj_width/2.0f, -obj_height/2.0f, 0));
-//        vec_obj_corners3d.push_back(Point3f(obj_width/2.0f, obj_height/2.0f, 0));
-//        vec_obj_corners3d.push_back(Point3f(-obj_width/2.0f, obj_height/2.0f, 0));
+        //        // obj coords; center
+        //        vec_obj_corners3d.push_back(Point3f(-obj_width/2.0f, -obj_height/2.0f, 0));
+        //        vec_obj_corners3d.push_back(Point3f(obj_width/2.0f, -obj_height/2.0f, 0));
+        //        vec_obj_corners3d.push_back(Point3f(obj_width/2.0f, obj_height/2.0f, 0));
+        //        vec_obj_corners3d.push_back(Point3f(-obj_width/2.0f, obj_height/2.0f, 0));
+
 
         printf("Image size: %dx%d. Scale: %f mm/pix\n", img_width, img_height, scale);
         printf("Descriptors Dim: %d; Col: %d; Row: %d\n",
@@ -101,6 +113,8 @@ Pattern::Pattern()
 void Pattern::buildPatternFromImage(Mat &img)
 {
     mat_image = img.clone();
+
+
     cvtColor( mat_image, mat_image_gray, CV_BGR2GRAY );
     img_width = mat_image.cols;
     img_height = mat_image.rows;

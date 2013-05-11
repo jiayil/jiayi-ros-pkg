@@ -35,6 +35,7 @@ public:
     Point obj_img_center;
     std::vector<Point3f> vec_obj_corners3d;
     std::vector<Point3f> vec_obj_matchedFeaturePoints3d;
+    Mat H_groundTruth;
 
 
 };
